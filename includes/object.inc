@@ -29,27 +29,33 @@ class IslandoraBatchLoadChildrenObject extends IslandoraBatchObject {
    * Assemble the datastreams and relationships.
    */
   public function batchProcess() {
-    $datastreams = $this->getDatastream();
-    $this->ingestDatastream($datastream);
-
     module_load_include('inc', 'islandora_batch_load_children', 'includes/utilities');
 
-    if ($this->preprocessorParameters['key_datastream'] == 'MODS') {
-      $this->label = islandora_batch_load_children_get_label();
-      $mods_content = islandora_batch_load_children_generate_mods($this->label, $child_identifier);
+    $datastream = $this->getDatastream();
+    $this->ingestDatastream($datastream);
 
-      if ($this->preprocessorParameters['create_dc'] === TRUE) {
-        $dc_content = islandora_batch_load_children_get_dc_from_xml($mods_content, $this->keyToDcTransform);
-        $dc = $this->constructDatastream('DC', 'X');
-        $dc->mimetype = 'text/xml';
-        $dc->label = 'Dublin Core Record for this object';
-        $dc->setContentFromString($dc_content);
-        $this->ingestDatastream($dc);
-      }
+    $parent_label =  islandora_batch_load_children_get_parent_label($pid_path_pair['parent_pid']);
+    $child_identifier = pathinfo($this->objectContentPath, PATHINFO_FILENAME);
+
+    $mods_xml = islandora_batch_load_children_generate_mods($child_title, $child_identifier);
+    print $mods_xml;
+
+    $this->label = islandora_batch_load_children_get_label();
+    $mods_content = islandora_batch_load_children_generate_mods($this->label, $child_identifier);
+
+    if ($this->preprocessorParameters['create_dc'] === TRUE) {
+      $dc_content = islandora_batch_load_children_get_dc_from_mods($mods_xml, $this->modsToDcTransform);
+      $dc = $this->constructDatastream('DC', 'X');
+      $dc->mimetype = 'text/xml';
+      $dc->label = 'Dublin Core Record for this object';
+      $dc->setContentFromString($dc_content);
+      $this->ingestDatastream($dc);
     }
 
     $this->addRelationships();
     $this->inheritXacmlPolicies();
+
+    $this->id = $this->connection->repository->getNextIdentifier($namespace, NULL, 0);
 
     // Indicate that this object is ready to be ingested.
     return ISLANDORA_BATCH_STATE__DONE;

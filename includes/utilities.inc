@@ -45,31 +45,39 @@ function islandora_batch_load_children_get_cmodel($extension) {
 }
 
 /**
- * Gets the object label from the key datastream.
+ * Gets the object label from the parent.
  *
- * @param string $xml
- *   The contents of the MODS.xml, MADS.xml, or DC.xml file.
+ * @param string $parent_pid
+ *   The parent object's PID.
  *
  * @return string
  *   A label for the object.
  */
-function islandora_batch_load_children_get_label($xml, $ns, $ns_uri, $xpath_query) {
-  $dom = new DOMDocument();
-  $dom->loadXML($xml);
-  $xpath = new DOMXPath($dom);
-  $xpath->registerNamespace($ns, $ns_uri);
-  $labels = $xpath->query($xpath_query);
-  if ($labels->length > 0) {
-    $label = $labels->item(0)->nodeValue;
+function islandora_batch_load_children_get_parent_label($parent_pid) {
+  $parent = islandora_object_load($parent_pid);
+  if ($parent) {
+    return $parent->label;
   }
   else {
-    $label = '[No object label available]';
+    return '[Parent label not available]';
   }
-  return $label;
 }
 
 /**
- * Generates DC XML from XML via XSLT (e.g., MODS or MADS).
+ * Gets the namespace from the parent.
+ *
+ * @param string $parent_pid
+ *   The parent object's PID.
+ *
+ * @return string
+ *   The namespace.
+ */
+function islandora_batch_load_children_get_parent_namespace($parent_pid) {
+  return preg_replace('/:.*$/', '', $parent_pid);
+}
+
+/**
+ * Generates DC XML from MODS XML via XSLT.
  *
  * @param string $xml
  *   An XML string.
@@ -79,7 +87,7 @@ function islandora_batch_load_children_get_label($xml, $ns, $ns_uri, $xpath_quer
  * @return string
  *   The transformed DC XML.
  */
-function islandora_batch_load_children_get_dc_from_xml($xml, $path_to_xslt) {
+function islandora_batch_load_children_get_dc_from_mods($xml, $path_to_xslt) {
   $xsl_doc = new DOMDocument();
   $xsl_doc->load($path_to_xslt);
   $xml_doc = new DOMDocument();

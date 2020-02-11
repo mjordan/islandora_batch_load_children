@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Implementation of classes from the batch ingest framework.
+ * Implementation of preprocessor class for the batch ingest framework.
  */
 
 /**
@@ -21,7 +21,7 @@ class IslandoraBatchLoadChildrenPreprocessor extends IslandoraBatchPreprocessor 
 
     var_dump($pid_path_pairs);
 
-    $child_title =  "Foo";
+    $parent_label =  islandora_batch_load_children_get_parent_label($pid_path_pair['parent_pid']);
     $child_identifier = '12345667890';
     $mods_xml = islandora_batch_load_children_generate_mods($child_title, $child_identifier);
     print $mods_xml;
@@ -42,9 +42,15 @@ class IslandoraBatchLoadChildrenPreprocessor extends IslandoraBatchPreprocessor 
         // Check to see if file exists.
         // If so, create Batch object.
         // $batch_object = new IslandoraBatchLoadChildrenObject($this->connection, $pid_path_pair['parent_pid'], $child_obj_path, $this->parameters);
+        if ($this->parameters['namespace']) {
+          $this->id = $this->getId($batch_object);
+        }
+        else {
+          $parent_namespace = islandora_batch_load_children_get_parent_namespace($pid_path_pair['parent_pid']);
+        }
         // Add to database and $added[]:
-        //  $this->addToDatabase($batch_object);
-        //  $added[] = $batch_object;
+        $this->addToDatabase($batch_object);
+        $added[] = $batch_object;
       }
     }
     return $added;

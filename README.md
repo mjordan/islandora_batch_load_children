@@ -1,6 +1,6 @@
 # Islandora Batch Load Children
 
-Islandora batch module for ingesting objects that are children of other objects.x
+Islandora batch module for ingesting objects that are children of other objects. The original use case for this module was to load fold-out "pages" in a digitized scrapbook. The scrapbook itself was ingested using the book content model, and the fold-outs were then ingested using this module as children of the book pages they were attached to.
 
 ## Preparing the child files
 
