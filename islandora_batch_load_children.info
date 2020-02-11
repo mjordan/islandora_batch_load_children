@@ -1,5 +1,5 @@
-name = Islandora Batch With Derivatives
-description = "A batch importer module for objects that have all of their derivatives pregenerated."
+name = Islandora Batch Load Children
+description = "A batch importer module for loading children objects."
 package = Islandora
 dependencies[] = islandora
 dependencies[] = islandora_batch

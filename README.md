@@ -1,6 +1,28 @@
 # Islandora Batch Load Children
 
-Islandora batch module for ingesting objects that are children of other objects.
+Islandora batch module for ingesting objects that are children of other objects.x
+
+## Preparing the child files
+
+This module uses a comma-delimited input file to associate parent objects with children. Child object files (TIFFs, PDFs, video files, etc.) for each parent listed in the input file need to be located in a directory and named so that the sequence of the children can be determined by sorting the filenames. For example, given an input file like this:
+
+```
+islandora:100,/tmp/100
+islandora:300,/tmp/300
+```
+
+Files in `/tmp/100` will be ingested so they are children of the parent with PID `islandora:100`. If the files are named
+
+```
+foo_01.tif
+foo_02.tif
+```
+
+`foo_01.tif` will be the first child and `foo_02.tif` will be the second child.
+
+## Metadata
+
+The XML file to use as a template for the MODS.xml file ingested with each child object is specified with the drush option `--template`.
 
 
 ## Requirements
@@ -12,13 +34,12 @@ Islandora batch module for ingesting objects that are children of other objects.
 
 Enable this module, then run its drush command to import objects:
 
-`drush --user=admin islandora_batch_load_children_preprocess --namespace=mynamespace --cmodel=xxx`
+`drush --user=admin islandora_batch_load_children_preprocess --namespace=mynamespace --input_file=/tmp/input.txt --template=/tmp/MODS.xml`
 
 Then, to perform the ingest:
 
 `drush --user=admin islandora_batch_ingest`
 
-## Preparing Islandora for ingesting
 
 ## Preparing your content files for ingesting
 

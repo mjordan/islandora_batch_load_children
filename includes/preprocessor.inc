@@ -14,64 +14,39 @@ class IslandoraBatchLoadChildrenPreprocessor extends IslandoraBatchPreprocessor 
    * Generates objects from input files and adds them to the batch queue.
    */
   public function preprocess() {
-    $input_directory = $this->parameters['scan_target'];
-    $object_dirs = array_diff(scandir($input_directory), array('..', '.'));
+    module_load_include('inc', 'islandora_batch_load_children', 'includes/utilities');
+
+    $input_file = $this->parameters['input_file'];
+    $pid_path_pairs = islandora_batch_load_children_read_input_file($input_file);
+
+    var_dump($pid_path_pairs);
+
+    $child_title =  "Foo";
+    $child_identifier = '12345667890';
+    $mods_xml = islandora_batch_load_children_generate_mods($child_title, $child_identifier);
+    print $mods_xml;
 
     // Accumulate a list of the objects to be added to the queue.
     $added = array();
 
-    // Check each subdirectory for the existence of the key datastream file
-    // and if found, add the object to the batch.
-    foreach ($object_dirs as $object_dir) {
-      $object_dir_path = $input_directory . DIRECTORY_SEPARATOR . $object_dir;
-      // A metadata file for the object is required (either MODS or DC).
-      $key_datastream_path = $object_dir_path . DIRECTORY_SEPARATOR . $this->parameters['key_datastream'] . '.xml';
-      if (file_exists($key_datastream_path)) {
-        $batch_object = new IslandoraBatchLoadChildrenObject($this->connection, $key_datastream_path, $this->parameters);
-        if ($this->parameters['use_pids']) {
-          // Get PID from object directory name. We use '+' in directory names
-          // to represent the PID's ':' because that character is guaranteed
-          // to not exist in the PID (it's not a valid character in PIDs) and
-          // it is filesystem safe.
-          if (preg_match('/\+/', $object_dir)) {
-            $pid = preg_replace('/\+/', ':', $object_dir);
-            // Check whether an object with PID exists, and if so,
-            // report that we are skipping ingest on this object.
-            if (islandora_object_load($pid)) {
-              // @todo: This check covers the case where an object that has the
-              // incoming PID already exists, but we also need to check the
-              // {islandora_batch_queue} table. If a previous batch ingest
-              // failed and the incoming PID existed in that failed batch,
-              // a subsequent batch ingest containing the PID will fail because
-              // of integrity errors on this table.
-              watchdog('islandora_batch_load_children', 'An object with the !pid already exists, skipping ingest.',
-                array('!pid' => $pid), WATCHDOG_WARNING);
-            }
-            else {
-              // Add the instance to the Islandora batch queue using the
-              // existing PID.
-              $batch_object->id = $pid;
-              $this->addToDatabase($batch_object);
-              $added[] = $batch_object;
-            }
-          }
-          else {
-            // If we can't get a PID from the object directory name, report
-            // that we are skipping inigest on this object.
-            watchdog('islandora_batch_load_children', 'PID not available from object directory name !object_dir, skipping ingest.',
-              array('!object_dir' => $object_dir), WATCHDOG_WARNING);
-          }
-        }
-        else {
-          // Add the instance to the Islandora batch queue. Islandora will
-          // assign a PID.
-          $this->addToDatabase($batch_object);
-          $added[] = $batch_object;
-        }
+    // Check each subdirectory for the existence of files to use as OBJ datastreams.
+    // If found, add it to the batch set.
+    foreach ($pid_path_pairs as $pid_path_pair) {
+      $child_obj_filenames = array_diff(scandir($pid_path_pair['child_input_path']), array('.', '..'));
+      // natsort($child_obj_filenames);
+      var_dump($child_obj_filenames);
+
+      foreach ($child_obj_filenames as $child_obj_filename) {
+        // Assemble the full path to the file.
+        $child_obj_path = $pid_path_pair['child_input_path'] . '/' . $child_obj_filename;
+        // Check to see if file exists.
+        // If so, create Batch object.
+        // $batch_object = new IslandoraBatchLoadChildrenObject($this->connection, $pid_path_pair['parent_pid'], $child_obj_path, $this->parameters);
+        // Add to database and $added[]:
+        //  $this->addToDatabase($batch_object);
+        //  $added[] = $batch_object;
       }
     }
-
     return $added;
   }
-
 }

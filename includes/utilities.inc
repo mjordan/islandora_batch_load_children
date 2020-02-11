@@ -89,3 +89,56 @@ function islandora_batch_load_children_get_dc_from_xml($xml, $path_to_xslt) {
   $dc_xml = $xslt_proc->transformToXML($xml_doc);
   return $dc_xml;
 }
+
+/**
+ * Returns a list of parent PID / child input directory pairs.
+ *
+ * @param string $input_file_path
+ *   The absolute path to the PID file.
+ *
+ * @return array
+ *   A list of PID / input directory pairs.
+ */
+function islandora_batch_load_children_read_input_file($input_file_path) {
+  if (!file_exists($input_file_path)) {
+    drush_set_error('FILE_NOT_FOUND',
+    dt('The specified input file (!file) does not exist.',
+      array('!file' => $input_file_path)));
+    drupal_exit();
+  }
+
+  $pairs = array();
+  $lines = file($input_file_path, FILE_IGNORE_NEW_LINES);
+  foreach ($lines as $pair) {
+    list($pid, $child_input_path) = explode(',', $pair);
+    // Skip commented out rows.
+    if (!preg_match('!(#|//)!', $pair)) {
+      $pairs[] = array('parent_pid' => $pid, 'child_input_path' => $child_input_path);
+    }
+  }
+  return $pairs;
+}
+
+/**
+ * Returns a simple MODS XML file for use with a child object.
+ *
+ * @param string $child_title
+ *   The title to assign to the child.
+ * @param string $child_identifier
+ *   The identifier to assign to the child.
+ *
+ * @return string
+ *   The MODS XML.
+ */
+function islandora_batch_load_children_generate_mods($child_title, $child_identifier) {
+  $child_mods_xml = <<<EOQ
+<mods xmlns="http://www.loc.gov/mods/v3" xmlns:mods="http://www.loc.gov/mods/v3" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <titleInfo>
+    <title>{$child_title}</title>
+  </titleInfo>
+  <identifier type="local">{$child_identifier}</identifier>
+</mods>
+EOQ;
+
+  return $child_mods_xml;
+}
