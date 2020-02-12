@@ -21,11 +21,21 @@ class IslandoraBatchLoadChildrenPreprocessor extends IslandoraBatchPreprocessor 
 
     // Accumulate a list of the objects to be added to the batch set.
     $added = array();
+    // Create array to store the child sequences.
+    $child_sequences = array('setID' => $this->getSetId(), 'child_sequences' => array());
 
     // Check each subdirectory for the existence of files to use as OBJ datastreams.
     // If found, create a new object for each and add it to the batch set.
     foreach ($pid_path_pairs as $pid_path_pair) {
       $child_obj_filenames = array_diff(scandir($pid_path_pair['child_input_path']), array('.', '..'));
+      // Reset index keys.
+      $child_obj_filenames = array_values($child_obj_filenames);
+      // Use PHP's natsort(). @todo: Maybe provide option to use other sorts?
+      natsort($child_obj_filenames);
+      foreach ($child_obj_filenames as $index => $filename) {
+        $parent_pid = $pid_path_pair['parent_pid'];
+        $child_sequences['child_sequences'][$parent_pid][] = array('filename' => $filename, 'sequence' => $index + 1);
+      }
 
       foreach ($child_obj_filenames as $child_obj_filename) {
         $child_obj_path = $pid_path_pair['child_input_path'] . '/' . $child_obj_filename;
@@ -48,6 +58,8 @@ class IslandoraBatchLoadChildrenPreprocessor extends IslandoraBatchPreprocessor 
         $added[] = $batch_object;
       }
     }
+    // @todo: Store $child_sequences so it survives sessions, cache clears, etc. We need to access it in the batch ingest step.
+    dd($child_sequences);
     return $added;
   }
 }
