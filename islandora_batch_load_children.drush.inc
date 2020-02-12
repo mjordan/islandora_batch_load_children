@@ -40,6 +40,10 @@ function islandora_batch_load_children_drush_command() {
         'value' => 'required',
         'required' => TRUE,
       ),
+      'child_title_label' => array(
+        'description' => "Text that will be used in child objects' titles to indicate their relationship to their parent, e.g., 'part', 'page', etc. If not specified, defaults to 'part'. For values that contain spaces, wrap the value in quotation marks.",
+        'value' => 'required',
+      ),
     ),
     'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_LOGIN,
   );
@@ -64,6 +68,7 @@ function drush_islandora_batch_load_children_preprocess() {
     'input_file' => drush_get_option('input_file'),
     'content_models' => drush_get_option('content_models', NULL),
     'namespace' => drush_get_option('namespace', NULL),
+    'child_title_label' => drush_get_option('child_title_label', 'part'),
   );
   // We need to cache the value of the 'namespace' option because we populate
   // it dynamically in the preprocessor. See note there for more detail.

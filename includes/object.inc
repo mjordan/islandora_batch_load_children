@@ -34,10 +34,9 @@ class IslandoraBatchLoadChildrenObject extends IslandoraBatchObject {
     $datastream = $this->getDatastreams();
     $this->ingestDatastream($datastream);
 
-    $parent_label =  islandora_batch_load_children_get_parent_label($pid_path_pair['parent_pid']);
+    $parent_label = islandora_batch_load_children_get_parent_label($this->parentPid);
     $child_identifier = pathinfo($this->objectContentPath, PATHINFO_FILENAME);
-    // @todo: decide how to create child titles.
-    $child_title = $parent_label;
+    $child_title = $parent_label . ', ' . $this->preprocessorParameters['child_title_label'] . ' x';
 
     $mods_xml = islandora_batch_load_children_generate_mods($child_title, $child_identifier);
     $mods = $this->constructDatastream('MODS', 'X');
