@@ -22,7 +22,7 @@ foo_02.tif
 
 ## Metadata
 
-The XML file to use as a template for the MODS.xml file ingested with each child object is specified with the drush option `--template`.
+A minimal MODS XML document is generated for each child object, containing a title and a local identifier derived from the child object's filename.
 
 
 ## Requirements

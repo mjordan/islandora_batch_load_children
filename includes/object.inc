@@ -31,17 +31,20 @@ class IslandoraBatchLoadChildrenObject extends IslandoraBatchObject {
   public function batchProcess() {
     module_load_include('inc', 'islandora_batch_load_children', 'includes/utilities');
 
-    $datastream = $this->getDatastream();
+    $datastream = $this->getDatastreams();
     $this->ingestDatastream($datastream);
 
     $parent_label =  islandora_batch_load_children_get_parent_label($pid_path_pair['parent_pid']);
     $child_identifier = pathinfo($this->objectContentPath, PATHINFO_FILENAME);
+    // @todo: decide how to create child titles.
+    $child_title = $parent_label;
 
     $mods_xml = islandora_batch_load_children_generate_mods($child_title, $child_identifier);
-    print $mods_xml;
-
-    $this->label = islandora_batch_load_children_get_label();
-    $mods_content = islandora_batch_load_children_generate_mods($this->label, $child_identifier);
+    $mods = $this->constructDatastream('MODS', 'X');
+    $mods->mimetype = 'application/xml';
+    $mods->label = 'MODS Record';
+    $mods->setContentFromString($mods_xml);
+    $this->ingestDatastream($mods);
 
     if ($this->preprocessorParameters['create_dc'] === TRUE) {
       $dc_content = islandora_batch_load_children_get_dc_from_mods($mods_xml, $this->modsToDcTransform);
@@ -55,7 +58,7 @@ class IslandoraBatchLoadChildrenObject extends IslandoraBatchObject {
     $this->addRelationships();
     $this->inheritXacmlPolicies();
 
-    $this->id = $this->connection->repository->getNextIdentifier($namespace, NULL, 0);
+    // $this->id = $this->connection->repository->getNextIdentifier($namespace, NULL, 0);
 
     // Indicate that this object is ready to be ingested.
     return ISLANDORA_BATCH_STATE__DONE;
@@ -70,7 +73,7 @@ class IslandoraBatchLoadChildrenObject extends IslandoraBatchObject {
     // Get content model from OBJ file extension. Or, if the content model is
     // provided as a Drush option, use it instead.
     if (is_null($this->preprocessorParameters['content_models'])) {
-      $ext = pathinfo($obj_files[0], PATHINFO_EXTENSION);
+      $ext = pathinfo($this->objectContentPath, PATHINFO_EXTENSION);
       $this->models = islandora_batch_load_children_get_cmodel($ext);
     }
     // A content model was provided as a Drush option. Use it instead.
@@ -112,7 +115,7 @@ class IslandoraBatchLoadChildrenObject extends IslandoraBatchObject {
    * @return object
    *   The datastream to ingest with the current object.
    */
-  private function getDatastream() {
+  public function getDatastreams() {
     $ds = $this->constructDatastream('OBJ', 'M');
     $mime_detector = new MimeDetect();
     $ds->mimetype = $mime_detector->getMimetype($this->objectContentPath);
