@@ -57,8 +57,6 @@ class IslandoraBatchLoadChildrenObject extends IslandoraBatchObject {
     $this->addRelationships();
     $this->inheritXacmlPolicies();
 
-    // $this->id = $this->connection->repository->getNextIdentifier($namespace, NULL, 0);
-
     // Indicate that this object is ready to be ingested.
     return ISLANDORA_BATCH_STATE__DONE;
   }
@@ -68,6 +66,7 @@ class IslandoraBatchLoadChildrenObject extends IslandoraBatchObject {
    */
   public function addRelationships() {
     module_load_include('inc', 'islandora_batch_load_children', 'includes/utilities');
+    $child_identifier = pathinfo($this->objectContentPath, PATHINFO_FILENAME);
 
     // Get content model from OBJ file extension. Or, if the content model is
     // provided as a Drush option, use it instead.
@@ -81,7 +80,10 @@ class IslandoraBatchLoadChildrenObject extends IslandoraBatchObject {
     }
 
     // Add relationship to parent.
-    // @todo: get sequence number.
+    $sequences = islandora_batch_load_children_get_child_sequences($this->parentPid);
+    // @todo: get sequence number for $child_identifier from $sequences.
+    $sequence_number = '1';
+
     $rels_predicate = $this->preprocessorParameters['parent_relationship_pred'];
     $rels_predicate_uri = $this->preprocessorParameters['parent_relationship_uri'];
     $this->relationships->add($rels_predicate_uri, $rels_predicate, $this->parentPid);

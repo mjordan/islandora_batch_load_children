@@ -6,6 +6,34 @@
  */
 
 /**
+ * Sets child sequences for a batch set.
+ *
+ * @param array $sequences
+ *   Associative array containing child sequences for all objects in the current batch set.
+ */
+function islandora_batch_load_children_set_child_sequences($sequences) {
+  // @todo: Add the current set's sequences to existing values in the
+  // islandora_batch_load_children variable.
+  variable_set('islandora_batch_load_children_child_sequences', $sequences);
+
+}
+
+/**
+ * Gets child sequences for a batch set.
+ *
+ * @param string $pid
+ *   The PID of the parent object to get sequences for.
+ *
+ * @return array
+ *   The child sequence array for the specified set, or an empty array if variable has not been set.
+ */
+function islandora_batch_load_children_get_child_sequences($pid) {
+  $sequences = variable_get('islandora_batch_load_children_child_sequences', array());
+  // @todo: Pick out the sequences for the current PID. Use a static cache so we're not
+  // hammering the db?
+}
+
+/**
  * Determines content model based on file extension.
  *
  * @param string $extension
