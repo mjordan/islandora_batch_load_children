@@ -12,10 +12,13 @@
  *   Associative array containing child sequences for all objects in the current batch set.
  */
 function islandora_batch_load_children_set_child_sequences($sequences) {
-  // @todo: Add the current set's sequences to existing values in the
-  // islandora_batch_load_children variable.
-  variable_set('islandora_batch_load_children_child_sequences', $sequences);
-
+  // Add the current set's sequences to existing values in the
+  // islandora_batch_load_children variable. In other words, merge the array
+  // in that variable with $sequences. We want to do this so we don't overwrite
+  // existing values.
+  $existing_sequences = variable_get('islandora_batch_load_children_child_sequences', array());
+  $new_sequences = array_merge($sequences, $existing_sequences);
+  variable_set('islandora_batch_load_children_child_sequences', $new_sequences);
 }
 
 /**
@@ -27,10 +30,14 @@ function islandora_batch_load_children_set_child_sequences($sequences) {
  * @return array
  *   The child sequence array for the specified set, or an empty array if variable has not been set.
  */
-function islandora_batch_load_children_get_child_sequences($pid) {
-  $sequences = variable_get('islandora_batch_load_children_child_sequences', array());
-  // @todo: Pick out the sequences for the current PID. Use a static cache so we're not
+function islandora_batch_load_children_get_child_sequence($path) {
+  // Pick out the sequences for the current PID. Use a static cache so we're not
   // hammering the db?
+  static $sequences;
+  if (!isset($sequences)) {
+    $sequences = variable_get('islandora_batch_load_children_child_sequences', array());
+  }
+  return $sequences[$path];
 }
 
 /**

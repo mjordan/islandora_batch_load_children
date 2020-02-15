@@ -33,14 +33,13 @@ class IslandoraBatchLoadChildrenPreprocessor extends IslandoraBatchPreprocessor 
       // Use PHP's natsort(). @todo: Maybe provide option to use other sorts?
       natsort($child_obj_filenames);
       foreach ($child_obj_filenames as $index => $filename) {
-        $parent_pid = $pid_path_pair['parent_pid'];
-        $child_sequences[$parent_pid][$filename] = $index + 1;
+        $child_obj_path = $pid_path_pair['child_input_path'] . '/' . $filename;
+        if (is_file($child_obj_path)) {
+          $child_sequences[$child_obj_path] = array('parent' => $pid_path_pair['parent_pid'], 'sequence' => $index + 1);
+        }
       }
 
       foreach ($child_obj_filenames as $child_obj_filename) {
-        $child_obj_path = $pid_path_pair['child_input_path'] . '/' . $child_obj_filename;
-        // Check to see if file exists.
-        // If so, create Batch object for it.
         $batch_object = new IslandoraBatchLoadChildrenObject($this->connection, $pid_path_pair['parent_pid'], $child_obj_path, $this->parameters);
         // The IslandoraBatchPreprocessor base class's getId() method uses 
         // $this->parameters['namespace']. We need to populate it dynamically

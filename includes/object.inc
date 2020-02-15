@@ -34,11 +34,13 @@ class IslandoraBatchLoadChildrenObject extends IslandoraBatchObject {
     $datastream = $this->getDatastreams();
     $this->ingestDatastream($datastream);
 
+    $this->sequence = islandora_batch_load_children_get_child_sequence($this->objectContentPath);
+
     $parent_label = islandora_batch_load_children_get_parent_label($this->parentPid);
     $child_identifier = pathinfo($this->objectContentPath, PATHINFO_FILENAME);
-    $child_title = $parent_label . ', ' . $this->preprocessorParameters['child_title_label'] . ' x';
+    $child_title = $parent_label . ', ' . $this->preprocessorParameters['child_title_label'] . ' ' . $this->sequence['sequence'];
 
-    $mods_xml = islandora_batch_load_children_generate_mods($child_title, $child_identifier);
+    $mods_xml = islandora_batch_load_children_generate_mods($child_title, $this->objectContentPath);
     $mods = $this->constructDatastream('MODS', 'X');
     $mods->mimetype = 'application/xml';
     $mods->label = 'MODS Record';
@@ -66,7 +68,6 @@ class IslandoraBatchLoadChildrenObject extends IslandoraBatchObject {
    */
   public function addRelationships() {
     module_load_include('inc', 'islandora_batch_load_children', 'includes/utilities');
-    $child_identifier = pathinfo($this->objectContentPath, PATHINFO_FILENAME);
 
     // Get content model from OBJ file extension. Or, if the content model is
     // provided as a Drush option, use it instead.
@@ -79,16 +80,18 @@ class IslandoraBatchLoadChildrenObject extends IslandoraBatchObject {
        $this->models = $this->preprocessorParameters['content_models'];
     }
 
-    // Add relationship to parent.
-    $sequences = islandora_batch_load_children_get_child_sequences($this->parentPid);
-    // @todo: get sequence number for $child_identifier from $sequences.
-    $sequence_number = '1';
-
-    $rels_predicate = $this->preprocessorParameters['parent_relationship_pred'];
-    $rels_predicate_uri = $this->preprocessorParameters['parent_relationship_uri'];
-    $this->relationships->add($rels_predicate_uri, $rels_predicate, $this->parentPid);
-    $escaped_parent_pid = str_replace(':', '_', $this->parentPid);
-    $this->relationships->add(ISLANDORA_RELS_EXT_URI, "isSequenceNumberOf$escaped_parent_pid", $sequence_number, RELS_TYPE_PLAIN_LITERAL);
+    // Add relationships to parent.
+    // $sequence_info = islandora_batch_load_children_get_child_sequence($this->objectContentPath);
+    if ($this->sequence['parent'] == $this->parentPid) {
+      $rels_predicate = $this->preprocessorParameters['parent_relationship_pred'];
+      $rels_predicate_uri = $this->preprocessorParameters['parent_relationship_uri'];
+      $this->relationships->add($rels_predicate_uri, $rels_predicate, $this->parentPid);
+      $escaped_parent_pid = str_replace(':', '_', $this->parentPid);
+      $this->relationships->add(ISLANDORA_RELS_EXT_URI, "isSequenceNumberOf$escaped_parent_pid", $this->sequence['sequence'], RELS_TYPE_PLAIN_LITERAL);
+    }
+    else {
+      drush_log(t("Object created from @path does not belong to parent @parent", array('@path' => $this->objectContentPath, '@parent' => $this->parentPid)), "error"); 
+    }
   }
 
   /**
