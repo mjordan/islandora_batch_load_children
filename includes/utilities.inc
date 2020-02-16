@@ -24,15 +24,15 @@ function islandora_batch_load_children_set_child_sequences($sequences) {
 /**
  * Gets child sequences for a batch set.
  *
- * @param string $pid
- *   The PID of the parent object to get sequences for.
+ * @param string $path
+ *   The path to the child object's file.
  *
  * @return array
  *   The child sequence array for the specified set, or an empty array if variable has not been set.
  */
 function islandora_batch_load_children_get_child_sequence($path) {
   // Pick out the sequences for the current PID. Use a static cache so we're not
-  // hammering the db?
+  // hammering the db.
   static $sequences;
   if (!isset($sequences)) {
     $sequences = variable_get('islandora_batch_load_children_child_sequences', array());

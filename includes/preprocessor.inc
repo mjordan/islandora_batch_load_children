@@ -38,24 +38,24 @@ class IslandoraBatchLoadChildrenPreprocessor extends IslandoraBatchPreprocessor 
           $child_sequences[$child_obj_path] = array('parent' => $pid_path_pair['parent_pid'], 'sequence' => $index + 1);
         }
       }
+    }
 
-      foreach ($child_obj_filenames as $child_obj_filename) {
-        $batch_object = new IslandoraBatchLoadChildrenObject($this->connection, $pid_path_pair['parent_pid'], $child_obj_path, $this->parameters);
-        // The IslandoraBatchPreprocessor base class's getId() method uses 
-        // $this->parameters['namespace']. We need to populate it dynamically
-        // here to manage the namespace used in that method, so we rely on a
-        // cached copy of the value of the --namespace option provided by the user.
-        if ($this->parameters['namespace_from_user']) {
-          $this->parameters['namespace'] = $this->parameters['namespace_from_user'];
-          $batch_object->id = $this->getId($batch_object);
-        }
-        else {
-          $this->parameters['namespace'] = islandora_batch_load_children_get_parent_namespace($pid_path_pair['parent_pid']);
-          $batch_object->id = $this->getId($batch_object);
-        }
-        $this->addToDatabase($batch_object);
-        $added[] = $batch_object;
+    foreach ($child_sequences as $child_path => $details) {
+      $batch_object = new IslandoraBatchLoadChildrenObject($this->connection, $details['parent'], $child_path, $this->parameters);
+      // The IslandoraBatchPreprocessor base class's getId() method uses 
+      // $this->parameters['namespace']. We need to populate it dynamically
+      // here to manage the namespace used in that method, so we rely on a
+      // cached copy of the value of the --namespace option provided by the user.
+      if ($this->parameters['namespace_from_user']) {
+        $this->parameters['namespace'] = $this->parameters['namespace_from_user'];
+        $batch_object->id = $this->getId($batch_object);
       }
+      else {
+        $this->parameters['namespace'] = islandora_batch_load_children_get_parent_namespace($details['parent']);
+        $batch_object->id = $this->getId($batch_object);
+      }
+      $this->addToDatabase($batch_object);
+      $added[] = $batch_object;
     }
     islandora_batch_load_children_set_child_sequences($child_sequences);
     return $added;

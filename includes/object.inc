@@ -2,15 +2,17 @@
 
 /**
  * @file
- * Implementation of classes from the batch ingest framework.
+ * Implementation of class from the batch ingest framework.
  */
 
 /**
  * Batch object class.
  */
 class IslandoraBatchLoadChildrenObject extends IslandoraBatchObject {
-  protected $objFilePath;
+  protected $parentPid;
+  protected $objectContentPath;
   protected $preprocessorParameters;
+  protected $sequence;
 
   /**
    * Constructor.
@@ -81,7 +83,6 @@ class IslandoraBatchLoadChildrenObject extends IslandoraBatchObject {
     }
 
     // Add relationships to parent.
-    // $sequence_info = islandora_batch_load_children_get_child_sequence($this->objectContentPath);
     if ($this->sequence['parent'] == $this->parentPid) {
       $rels_predicate = $this->preprocessorParameters['parent_relationship_pred'];
       $rels_predicate_uri = $this->preprocessorParameters['parent_relationship_uri'];
@@ -90,7 +91,7 @@ class IslandoraBatchLoadChildrenObject extends IslandoraBatchObject {
       $this->relationships->add(ISLANDORA_RELS_EXT_URI, "isSequenceNumberOf$escaped_parent_pid", $this->sequence['sequence'], RELS_TYPE_PLAIN_LITERAL);
     }
     else {
-      drush_log(t("Object created from @path does not belong to parent @parent", array('@path' => $this->objectContentPath, '@parent' => $this->parentPid)), "error"); 
+      drush_log(t("Object created from @path does not belong to parent @parent, skipping creation of parent/child relationships.", array('@path' => $this->objectContentPath, '@parent' => $this->parentPid)), "error"); 
     }
   }
 
