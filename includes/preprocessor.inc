@@ -27,11 +27,7 @@ class IslandoraBatchLoadChildrenPreprocessor extends IslandoraBatchPreprocessor 
     // Check each subdirectory for the existence of files to use as OBJ datastreams.
     // If found, create a new object for each and add it to the batch set.
     foreach ($pid_path_pairs as $pid_path_pair) {
-      $child_obj_filenames = array_diff(scandir($pid_path_pair['child_input_path']), array('.', '..'));
-      // Reset index keys.
-      $child_obj_filenames = array_values($child_obj_filenames);
-      // Use PHP's natsort(). @todo: Maybe provide option to use other sorts?
-      natsort($child_obj_filenames);
+      $child_obj_filenames = islandora_batch_load_children_get_child_files($pid_path_pair['child_input_path']);
       foreach ($child_obj_filenames as $index => $filename) {
         $child_obj_path = $pid_path_pair['child_input_path'] . '/' . $filename;
         if (is_file($child_obj_path)) {

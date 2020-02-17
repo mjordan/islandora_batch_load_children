@@ -48,6 +48,26 @@ function islandora_batch_load_children_drush_command() {
     'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_LOGIN,
   );
 
+  $items['islandora_batch_load_children_check_input'] = array(
+    'description' => 'Checks for the existence of parent objects and of child files.',
+    'options' => array(
+      'namespace' => array(
+        'description' => 'The namespace for objects created by this command. If not specified, objects inherit the namespace of their parent.',
+        'value' => 'optional',
+      ),
+      'input_file' => array(
+        'description' => "Absolute path to a comma-delimited file containing parent PID / input path pairs.",
+        'value' => 'required',
+        'required' => TRUE,
+      ),
+      'child_title_label' => array(
+        'description' => "Text that will be used in child objects' titles to indicate their relationship to their parent, e.g., 'part', 'page', etc. If not specified, defaults to 'part'. For values that contain spaces, wrap the value in quotation marks.",
+        'value' => 'required',
+      ),
+    ),
+    'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_LOGIN,
+  );
+
   return $items;
 }
 
@@ -78,4 +98,28 @@ function drush_islandora_batch_load_children_preprocess() {
   $preprocessor = new IslandoraBatchLoadChildrenPreprocessor($connection, $parameters);
   $preprocessed = islandora_batch_handle_preprocessor($preprocessor);
   drush_log(t("SetId: @s", array('@s' => $preprocessor->getSetId())), "ok");
+}
+
+/**
+ * Implements hook_drush_command().
+ */
+function drush_islandora_batch_load_children_check_input() {
+  // Due to how Drush bootstrapping works, the connection may be created
+  // without credentials (when your site's front page is
+  // 'islandora/object/some:object', for example). Resetting to ensure a new
+  // connection gets created should fix it.
+  drupal_static_reset('islandora_get_tuque_connection');
+  $connection = islandora_get_tuque_connection();
+  $options = array(
+    'input_file' => drush_get_option('input_file'),
+    'namespace' => drush_get_option('namespace', NULL),
+    'child_title_label' => drush_get_option('child_title_label', 'part'),
+  );
+  // We need to cache the value of the 'namespace' option because we populate
+  // it dynamically in the preprocessor. See note there for more detail.
+  $options['namespace_from_user'] = drush_get_option('namespace', NULL);
+
+  // Run the checks.
+  module_load_include('inc', 'islandora_batch_load_children', 'includes/utilities');
+  islandora_batch_load_children_check_input($options);
 }

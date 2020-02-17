@@ -19,7 +19,7 @@ As with other Islandora 7 batch ingest modules, you need to then perform the ing
 
 ## Preparing the child files
 
-This module uses a comma-delimited input file to associate parent objects with children. Child object files (TIFFs, PDFs, video files, etc.) for each parent listed in the input file need to be located in a directory and named so that the sequence of the children can be determined by sorting the filenames. For example, given an input file like this:
+This module uses a comma-delimited input file to associate parent objects with children. Child object files (TIFFs, PDFs, video files, etc.) for each parent listed in the input file need to be located in a directory and named so that the sequence of the children can be determined by sorting the filenames. The path to each file directory must be absolute, not relative. For example, given an input file like this:
 
 ```
 islandora:100,/tmp/100
@@ -36,6 +36,16 @@ foo_02.tif
 `foo_01.tif` will be the first child and `foo_02.tif` will be the second child.
 
 The sequence number each object is assigned in relation to its parent is determined by how its filename sorts compared to its sibling files using PHP's [natsort](https://www.php.net/manual/en/function.natsort.php) function.
+
+## Validating your input
+
+Before you ingest child objects, you should validate your input (the objects and files named in your input file). To do so, run
+
+`drush --user=admin islandora_batch_load_children_check_input  --input_file=/tmp/test.txt`
+
+where `--input_file` is your input file. You can also include the `--namespace` and `--child_title_label` options in this command.
+
+Note that this command does not create a batch job, or write to your Islandora repository or Drupal in any way.
 
 ## Cleaning up
 

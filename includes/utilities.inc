@@ -41,6 +41,24 @@ function islandora_batch_load_children_get_child_sequence($path) {
 }
 
 /**
+ * Reads the input directory containing child OBJ files for a single parent.
+ *
+ * @param string $path
+ *   The absolute path to the child object's input directory.
+ *
+ * @return array
+ *   A list of files in the directory, minus . and .., indexes reset, and natsorted.
+ */
+function islandora_batch_load_children_get_child_files($path) {
+  $child_obj_filenames = array_diff(scandir($path), array('.', '..'));
+  // Reset index keys.
+  $child_obj_filenames = array_values($child_obj_filenames);
+  // Use PHP's natsort(). @todo: Maybe provide option to use other sorts?
+  natsort($child_obj_filenames);
+  return $child_obj_filenames;
+}
+
+/**
  * Determines content model based on file extension.
  *
  * @param string $extension
@@ -85,8 +103,8 @@ function islandora_batch_load_children_get_cmodel($extension) {
  * @param string $parent_pid
  *   The parent object's PID.
  *
- * @return string
- *   A label for the object.
+ * @return bool|string
+ *   A label for the object, or if the parent cannot be loaded, FALSE.
  */
 function islandora_batch_load_children_get_parent_label($parent_pid) {
   $parent = islandora_object_load($parent_pid);
@@ -94,7 +112,8 @@ function islandora_batch_load_children_get_parent_label($parent_pid) {
     return $parent->label;
   }
   else {
-    return '[Parent label not available]';
+    // return '[Parent label not available]';
+    return FALSE;
   }
 }
 
@@ -184,4 +203,71 @@ function islandora_batch_load_children_generate_mods($child_title, $child_identi
 EOQ;
 
   return $child_mods_xml;
+}
+
+/**
+ * Generate title of child object.
+ *
+ * @param string $parent_label
+ *   The parent object's label.
+ * @param string $child_title_label
+ *   The child title label supplied as a Drush option.
+ * @param string $sequence
+ *   The child's sequence number.
+ *
+ * @return string
+ *   The MODS XML.
+ */
+function islandora_batch_load_children_generate_child_title($parent_label, $child_title_label, $sequence) {
+  $child_title = $parent_label . ', ' . $child_title_label . ' ' . $sequence;
+  return $child_title;
+}
+
+/**
+ * Checks for the existence of parent objects and child files.
+ *
+ * @param array $options
+ *   Associative array containing some options supplied on the Drush command line.
+ */
+function islandora_batch_load_children_check_input($options) {
+  $pid_path_pairs = islandora_batch_load_children_read_input_file($options['input_file']);
+
+  // Check each subdirectory for the existence of files to use as OBJ datastreams.
+  // If found, create a new object for each and add it to the batch set.
+  foreach ($pid_path_pairs as $pid_path_pair) {
+    $parent_label = islandora_batch_load_children_get_parent_label($pid_path_pair['parent_pid']);
+    $child_obj_filenames = islandora_batch_load_children_get_child_files($pid_path_pair['child_input_path']);
+    foreach ($child_obj_filenames as $index => $filename) {
+      $child_obj_path = $pid_path_pair['child_input_path'] . '/' . $filename;
+      if (is_file($child_obj_path)) {
+        $sequence = $index + 1;
+        if ($options['namespace']) {
+          $namespace = $options['namespace'];
+        }
+        else {
+          $namespace = islandora_batch_load_children_get_parent_namespace($pid_path_pair['parent_pid']);
+        }
+        if ($parent_label) {
+          $child_title = islandora_batch_load_children_generate_child_title($parent_label, $options['child_title_label'], $sequence);
+        }
+        else {
+          $child_title = NULL;
+        }
+        if ($child_title) {
+          $child_title_message = t("@path will be used to create child of @parent using namespace '@namespace' and title '@child_title'.", array('@path' => $child_obj_path, '@parent' => $pid_path_pair['parent_pid'], '@namespace' => $namespace, '@child_title' => $child_title));
+          drush_log($child_title_message, "ok");
+        }
+        else {
+          $child_title_message = t("Parent object @pid not found or not accessible.", array('@pid' => $pid_path_pair['parent_pid']));
+          drush_log($child_title_message, "error");
+        }
+      }
+      else {
+        // @todo: Report that file is not a regular file.
+        $child_title_message = t("File @path is not a regular file.", array('@path' => $child_obj_path));
+        drush_log($child_title_message, "error");
+      }
+    }
+  }
+
 }
