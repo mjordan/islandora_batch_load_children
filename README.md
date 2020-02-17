@@ -35,7 +35,7 @@ foo_02.tif
 
 `foo_01.tif` will be the first child and `foo_02.tif` will be the second child.
 
-The sequence number each object is assigned in relation to its parent is determined by how its filename sorts in relation to its sibling objects using PHP's [natsort](https://www.php.net/manual/en/function.natsort.php) function.
+The sequence number each object is assigned in relation to its parent is determined by how its filename sorts compared to its sibling files using PHP's [natsort](https://www.php.net/manual/en/function.natsort.php) function.
 
 ## Cleaning up
 
@@ -47,7 +47,7 @@ After you ingest our child objects, you should delete the stale data generated b
 
 A minimal MODS XML document is generated for each child object, containing a title and a local identifier derived from the child object's filename.
 
-By default, child objects inherit their parent's title, with 'part X' appended. For example, if children are added to a parent whose title it 'Sample object', the children will get the titles 'Sample object, part 1', Sample object, part 2', etc. You can override 'part' with the `'child_title_label` Drush option:
+By default, child objects inherit their parent's title, with 'part X' appended. For example, if children are added to a parent whose title it 'Sample object', the children will get the titles 'Sample object, part 1', Sample object, part 2', etc. You can override 'part' with the `child_title_label` Drush option:
 
 `drush --user=admin islandora_batch_load_children_preprocess  --input_file=/tmp/test.txt --child_title_label=segment`
 
