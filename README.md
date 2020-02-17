@@ -12,6 +12,10 @@ To load child objects, prepare their content as described in the next section, a
 
 Run `drush --user=admin islandora_batch_load_children_preprocess  --help` for information on other options.
 
+As with other Islandora 7 batch ingest modules, you need to then perform the ingest:
+
+`drush --user=admin islandora_batch_ingest`
+
 
 ## Preparing the child files
 
@@ -54,16 +58,6 @@ will result in children with titles 'Sample object, segment 1', 'Sample object, 
 
 * [Islandora](https://github.com/Islandora/islandora)
 * [Islandora Batch](https://github.com/Islandora/islandora_batch)
-
-## Usage
-
-Enable this module, then run its drush command to import objects:
-
-`drush --user=admin islandora_batch_load_children_preprocess --namespace=mynamespace --input_file=/tmp/input.txt --template=/tmp/MODS.xml`
-
-Then, to perform the ingest:
-
-`drush --user=admin islandora_batch_ingest`
 
 ## Maintainer
 
