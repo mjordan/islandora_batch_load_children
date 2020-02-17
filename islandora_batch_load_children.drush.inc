@@ -64,6 +64,10 @@ function islandora_batch_load_children_drush_command() {
         'description' => "Text that will be used in child objects' titles to indicate their relationship to their parent, e.g., 'part', 'page', etc. If not specified, defaults to 'part'. For values that contain spaces, wrap the value in quotation marks.",
         'value' => 'required',
       ),
+      'log_file' => array(
+        'description' => "Absolute path to file containing output of this command. If not supplied, Drush will show output in console only.",
+        'value' => 'required',
+      ),
     ),
     'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_LOGIN,
   );
@@ -112,6 +116,7 @@ function drush_islandora_batch_load_children_check_input() {
   $connection = islandora_get_tuque_connection();
   $options = array(
     'input_file' => drush_get_option('input_file'),
+    'log_file' => drush_get_option('log_file', NULL),
     'namespace' => drush_get_option('namespace', NULL),
     'child_title_label' => drush_get_option('child_title_label', 'part'),
   );

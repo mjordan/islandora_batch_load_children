@@ -43,7 +43,7 @@ Before you ingest child objects, you should validate your input (the objects and
 
 `drush --user=admin islandora_batch_load_children_check_input  --input_file=/tmp/test.txt`
 
-where `--input_file` is your input file. You can also include the `--namespace` and `--child_title_label` options in this command.
+where `--input_file` is your input file. You can also include the `--namespace` and `--child_title_label` options in this command. If you want to log the output of this command to a file, add the `--log_file` option specifying the absolute path to your log file.
 
 Note that this command does not create a batch job, or write to your Islandora repository or Drupal in any way.
 

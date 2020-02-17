@@ -254,20 +254,43 @@ function islandora_batch_load_children_check_input($options) {
           $child_title = NULL;
         }
         if ($child_title) {
-          $child_title_message = t("@path will be used to create child of @parent using namespace '@namespace' and title '@child_title'.", array('@path' => $child_obj_path, '@parent' => $pid_path_pair['parent_pid'], '@namespace' => $namespace, '@child_title' => $child_title));
-          drush_log($child_title_message, "ok");
+          $message = t("@path will be used to create child of @parent using namespace '@namespace' and title '@child_title'.", array('@path' => $child_obj_path, '@parent' => $pid_path_pair['parent_pid'], '@namespace' => $namespace, '@child_title' => $child_title));
+          drush_log($message, "ok");
+          if ($options['log_file']) {
+            islandora_batch_load_children_write_log($options['log_file'], 'ok', $message);
+          }
         }
         else {
-          $child_title_message = t("Parent object @pid not found or not accessible.", array('@pid' => $pid_path_pair['parent_pid']));
-          drush_log($child_title_message, "error");
+          $message = t("Parent object @pid not found or not accessible.", array('@pid' => $pid_path_pair['parent_pid']));
+          drush_log($message, "error");
+          if ($options['log_file']) {
+            islandora_batch_load_children_write_log($options['log_file'], 'error', $message);
+          }
         }
       }
       else {
-        // @todo: Report that file is not a regular file.
-        $child_title_message = t("File @path is not a regular file.", array('@path' => $child_obj_path));
-        drush_log($child_title_message, "error");
+        $message = t("File @path is not a regular file.", array('@path' => $child_obj_path));
+        drush_log($message, "error");
+          if ($options['log_file']) {
+            islandora_batch_load_children_write_log($options['log_file'], 'error', $message);
+          }
       }
     }
   }
-
 }
+
+/**
+ * Writes the log file.
+ *
+ * @param string $path
+ *   The path to the log file.
+ * @param string $status
+ *   'ok', 'error', etc.
+ * @param string $message
+ *   The message to write to the log.
+ */
+function islandora_batch_load_children_write_log($path, $status, $message) {
+  $entry = $status . "\t" . trim($message);
+  file_put_contents($path, $entry . PHP_EOL, FILE_APPEND);
+}
+
